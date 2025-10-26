@@ -1,458 +1,207 @@
 "use client";
 
 import { useState } from "react";
-import styles from "./page.module.css";
-import {
-  Edit3,
-  Trash2,
-  Eye,
-  EyeOff,
-  Plus,
-  Save,
-  X,
-  Search,
-  AlertCircle,
-} from "lucide-react";
+import { Users, Shield, Network, Settings, FileText, Activity } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import styles from "./page.module.css";
 
-export default function AdminUserManagement() {
+export default function AdminPanel() {
   const { language } = useLanguage();
+  const [tab, setTab] = useState("users");
 
+  // Mock users
   const [users, setUsers] = useState([
-    {
-      id: 1,
-      firstName: "Anucha",
-      lastName: "Kittisak",
-      email: "anucha@hospital.com",
-      password: "123456",
-      role: "Physician",
-      hospital: "Ramathibodi Hospital",
-    },
-    {
-      id: 2,
-      firstName: "Mali",
-      lastName: "Siriwan",
-      email: "mali@hospital.com",
-      password: "pass789",
-      role: "Pharmacist",
-      hospital: "Siriraj Hospital",
-    },
-    {
-      id: 3,
-      firstName: "Bee",
-      lastName: "Wongchai",
-      email: "bee@hospital.com",
-      password: "data999",
-      role: "Data Entry",
-      hospital: "Bangkok Hospital",
-    },
+    { name: "Dr. Alice", role: "Admin", department: "Pharmacogenomics" },
+    { name: "Tech. Bob", role: "Technician", department: "Molecular Lab" },
+    { name: "Pharm. Carol", role: "Pharmacist", department: "Clinical Pharmacy" },
   ]);
 
-  const [showPassword, setShowPassword] = useState<Record<number, boolean>>({});
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [newUser, setNewUser] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    role: "",
-    hospital: "",
-  });
-  const [error, setError] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterRole, setFilterRole] = useState("All");
+  const [logs] = useState([
+    { user: "Admin", action: "Edited Patient Record", time: "2025-10-26 13:32" },
+    { user: "Tech. Bob", action: "Uploaded QC File", time: "2025-10-25 10:21" },
+  ]);
 
-  // Filter
-  const filteredUsers = users.filter((u) => {
-    const matchRole = filterRole === "All" || u.role === filterRole;
-    const matchName = u.firstName
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchRole && matchName;
-  });
-
-  const validateUser = (user: any) =>
-    user.firstName.trim() &&
-    user.lastName.trim() &&
-    user.email.trim() &&
-    user.password.trim() &&
-    user.role.trim() &&
-    user.hospital.trim();
-
-  const handleAddUser = () => {
-    if (!validateUser(newUser)) {
-      setError(
-        language === "en"
-          ? "⚠️ Please fill in all fields before saving."
-          : "⚠️ กรุณากรอกข้อมูลให้ครบทุกช่องก่อนบันทึก"
-      );
-      return;
-    }
-    const newId = Date.now();
-    setUsers((prev) => [...prev, { id: newId, ...newUser }]);
-    setNewUser({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      role: "",
-      hospital: "",
-    });
-    setError("");
-    setShowAddModal(false);
-  };
-
-  const handleEditUser = (user: any) => {
-    setSelectedUser(user);
-    setShowEditModal(true);
-    setError("");
-  };
-
-  const handleSaveEdit = () => {
-    if (!validateUser(selectedUser)) {
-      setError(
-        language === "en"
-          ? "⚠️ Please fill in all fields before saving."
-          : "⚠️ กรุณากรอกข้อมูลให้ครบทุกช่องก่อนบันทึก"
-      );
-      return;
-    }
-    setUsers((prev) =>
-      prev.map((u) => (u.id === selectedUser.id ? selectedUser : u))
-    );
-    setError("");
-    setShowEditModal(false);
-  };
-
-  const handleDeleteUser = (id: number) => {
-    if (
-      confirm(
-        language === "en"
-          ? "Delete this user?"
-          : "คุณต้องการลบผู้ใช้นี้หรือไม่?"
-      )
-    ) {
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    }
-  };
-
-  const toggleShowPassword = (id: number) => {
-    setShowPassword((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // =================== Render ===================
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>
-        {language === "en" ? "User Management" : "จัดการผู้ใช้"}
+        {language === "en" ? "Admin Panel" : "การตั้งค่าระบบ (Admin Panel)"}
       </h1>
       <p className={styles.subtitle}>
         {language === "en"
-          ? "Add, search, and manage users with full admin control"
-          : "เพิ่ม ค้นหา และจัดการผู้ใช้ได้อย่างสมบูรณ์"}
+          ? "Manage users, PDPA, integration, and system settings"
+          : "จัดการผู้ใช้งาน, PDPA, การเชื่อมต่อ และการตั้งค่าระบบ"}
       </p>
 
-      {/* Filter + Search */}
-      <div className={styles.filterBar}>
-        <div className={styles.filterGroup}>
-          <label>
-            {language === "en" ? "Filter by Role:" : "กรองตามบทบาท:"}
-          </label>
-          <select
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            className={styles.selectSmall}
-          >
-            <option value="All">{language === "en" ? "All" : "ทั้งหมด"}</option>
-            <option value="Physician">
-              {language === "en" ? "Physician" : "แพทย์"}
-            </option>
-            <option value="Pharmacist">
-              {language === "en" ? "Pharmacist" : "เภสัชกร"}
-            </option>
-            <option value="Data Entry">
-              {language === "en" ? "Data Entry" : "เจ้าหน้าที่บันทึกข้อมูล"}
-            </option>
-            <option value="Admin">
-              {language === "en" ? "Admin" : "ผู้ดูแลระบบ"}
-            </option>
-          </select>
-        </div>
-
-        <div className={styles.searchGroup}>
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder={
-              language === "en"
-                ? "Search by first name..."
-                : "ค้นหาด้วยชื่อ..."
-            }
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={styles.searchInput}
-          />
-        </div>
-
-        <button onClick={() => setShowAddModal(true)} className={styles.addBtn}>
-          <Plus size={16} />{" "}
-          {language === "en" ? "Add User" : "เพิ่มผู้ใช้"}
+      {/* Tabs */}
+      <div className={styles.tabBar}>
+        <button className={`${styles.tabBtn} ${tab === "users" ? styles.active : ""}`} onClick={() => setTab("users")}>
+          👥 {language === "en" ? "User Management" : "การจัดการผู้ใช้งาน"}
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "pdpa" ? styles.active : ""}`} onClick={() => setTab("pdpa")}>
+          🧾 PDPA
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "integration" ? styles.active : ""}`} onClick={() => setTab("integration")}>
+          🔗 {language === "en" ? "Integration" : "การเชื่อมต่อระบบ"}
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "system" ? styles.active : ""}`} onClick={() => setTab("system")}>
+          ⚙️ {language === "en" ? "System Settings" : "การตั้งค่าทั่วไป"}
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "license" ? styles.active : ""}`} onClick={() => setTab("license")}>
+          📜 {language === "en" ? "License & TT" : "สิทธิ์การใช้งาน & TT"}
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "log" ? styles.active : ""}`} onClick={() => setTab("log")}>
+          🧠 Audit Log
         </button>
       </div>
 
-      {/* Table */}
-      <div className={styles.tableBox}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>{language === "en" ? "Full Name" : "ชื่อ-นามสกุล"}</th>
-              <th>Email</th>
-              <th>{language === "en" ? "Password" : "รหัสผ่าน"}</th>
-              <th>{language === "en" ? "Role" : "บทบาท"}</th>
-              <th>{language === "en" ? "Hospital" : "โรงพยาบาล"}</th>
-              <th>{language === "en" ? "Actions" : "การจัดการ"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredUsers.map((u) => (
-              <tr key={u.id}>
-                <td>
-                  {u.firstName} {u.lastName}
-                </td>
-                <td>{u.email}</td>
-                <td>
-                  {showPassword[u.id] ? u.password : "••••••"}
-                  <button
-                    className={styles.iconBtn}
-                    onClick={() => toggleShowPassword(u.id)}
-                    title={
-                      language === "en"
-                        ? "Show Password"
-                        : "แสดงรหัสผ่าน"
-                    }
-                  >
-                    {showPassword[u.id] ? (
-                      <EyeOff size={14} />
-                    ) : (
-                      <Eye size={14} />
-                    )}
-                  </button>
-                </td>
-                  <td>
-                    {u.role === "Physician" && (language === "en" ? "Physician" : "แพทย์")}
-                    {u.role === "Pharmacist" && (language === "en" ? "Pharmacist" : "เภสัชกร")}
-                    {u.role === "Data Entry" && (language === "en" ? "Data Entry" : "เจ้าหน้าที่บันทึกข้อมูล")}
-                    {u.role === "Admin" && (language === "en" ? "Admin" : "ผู้ดูแลระบบ")}
-                  </td>
-                <td>{u.hospital}</td>
-                <td>
-                  <button
-                    className={styles.iconBtn}
-                    title={language === "en" ? "Edit User" : "แก้ไขผู้ใช้"}
-                    onClick={() => handleEditUser(u)}
-                  >
-                    <Edit3 size={16} />
-                  </button>
-                  <button
-                    className={styles.iconBtn}
-                    title={language === "en" ? "Delete User" : "ลบผู้ใช้"}
-                    onClick={() => handleDeleteUser(u.id)}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </td>
+      {/* ---------- USER MANAGEMENT ---------- */}
+      {tab === "users" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            {language === "en" ? "User Management" : "การจัดการผู้ใช้งาน"}
+          </h2>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>{language === "en" ? "Name" : "ชื่อ"}</th>
+                <th>{language === "en" ? "Role" : "สิทธิ์"}</th>
+                <th>{language === "en" ? "Department" : "หน่วยงาน"}</th>
+                <th>{language === "en" ? "Actions" : "จัดการ"}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map((u, i) => (
+                <tr key={i}>
+                  <td>{u.name}</td>
+                  <td>{u.role}</td>
+                  <td>{u.department}</td>
+                  <td>
+                    <button className={styles.smallBtn}>
+                      {language === "en" ? "Edit" : "แก้ไข"}
+                    </button>
+                    <button className={styles.smallBtnDel}>
+                      {language === "en" ? "Delete" : "ลบ"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-      {/* Modal: Add */}
-      {showAddModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>{language === "en" ? "Add New User" : "เพิ่มผู้ใช้ใหม่"}</h3>
-            {error && (
-              <p className={styles.errorText}>
-                <AlertCircle size={16} /> {error}
-              </p>
-            )}
-            <label>{language === "en" ? "First Name" : "ชื่อ"}</label>
-            <input
-              type="text"
-              value={newUser.firstName}
-              onChange={(e) =>
-                setNewUser({ ...newUser, firstName: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Last Name" : "นามสกุล"}</label>
-            <input
-              type="text"
-              value={newUser.lastName}
-              onChange={(e) =>
-                setNewUser({ ...newUser, lastName: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>Email</label>
-            <input
-              type="email"
-              value={newUser.email}
-              onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Password" : "รหัสผ่าน"}</label>
-            <input
-              type="text"
-              value={newUser.password}
-              onChange={(e) =>
-                setNewUser({ ...newUser, password: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Hospital" : "โรงพยาบาล"}</label>
-            <input
-              type="text"
-              value={newUser.hospital}
-              onChange={(e) =>
-                setNewUser({ ...newUser, hospital: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Role" : "บทบาท"}</label>
-            <select
-              value={newUser.role}
-              onChange={(e) =>
-                setNewUser({ ...newUser, role: e.target.value })
-              }
-              className={styles.select}
-            >
-              <option value="">
-                {language === "en" ? "Select Role" : "เลือกบทบาท"}
-              </option>
-              <option value="Physician">
-                {language === "en" ? "Physician" : "แพทย์"}
-              </option>
-              <option value="Pharmacist">
-                {language === "en" ? "Pharmacist" : "เภสัชกร"}
-              </option>
-              <option value="Data Entry">
-                {language === "en" ? "Data Entry" : "เจ้าหน้าที่บันทึกข้อมูล"}
-              </option>
-              <option value="Admin">
-                {language === "en" ? "Admin" : "ผู้ดูแลระบบ"}
-              </option>
+      {/* ---------- PDPA ---------- */}
+      {tab === "pdpa" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>PDPA Management</h2>
+          <p>{language === "en" ? "Manage consent templates, retention, and DPIA" : "ตั้งค่า Consent, Retention Policy และ DPIA"}</p>
+
+          <div className={styles.form}>
+            <label>{language === "en" ? "Data Retention (years)" : "ระยะเวลาเก็บข้อมูล (ปี)"}</label>
+            <input className={styles.input} type="number" placeholder="5" />
+
+            <label>{language === "en" ? "Enable Dynamic e-Consent" : "เปิดใช้งาน e-Consent แบบไดนามิก"}</label>
+            <select className={styles.input}>
+              <option>ON</option>
+              <option>OFF</option>
             </select>
 
-            <div className={styles.modalButtons}>
-              <button onClick={handleAddUser} className={styles.saveBtn}>
-                <Save size={16} /> {language === "en" ? "Save" : "บันทึก"}
-              </button>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className={styles.cancelBtn}
-              >
-                <X size={16} /> {language === "en" ? "Cancel" : "ยกเลิก"}
-              </button>
-            </div>
+            <label>{language === "en" ? "Default Purpose" : "วัตถุประสงค์การใช้ข้อมูล"}</label>
+            <select className={styles.input}>
+              <option>Clinical</option>
+              <option>Research</option>
+            </select>
+
+            <button className={styles.button}>
+              {language === "en" ? "Save PDPA Settings" : "บันทึกการตั้งค่า PDPA"}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Modal: Edit */}
-      {showEditModal && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h3>{language === "en" ? "Edit User" : "แก้ไขผู้ใช้"}</h3>
-            {error && (
-              <p className={styles.errorText}>
-                <AlertCircle size={16} /> {error}
-              </p>
-            )}
-            <label>{language === "en" ? "First Name" : "ชื่อ"}</label>
-            <input
-              type="text"
-              value={selectedUser.firstName}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, firstName: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Last Name" : "นามสกุล"}</label>
-            <input
-              type="text"
-              value={selectedUser.lastName}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, lastName: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>Email</label>
-            <input
-              type="email"
-              value={selectedUser.email}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, email: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Password" : "รหัสผ่าน"}</label>
-            <input
-              type="text"
-              value={selectedUser.password}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, password: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Hospital" : "โรงพยาบาล"}</label>
-            <input
-              type="text"
-              value={selectedUser.hospital}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, hospital: e.target.value })
-              }
-              className={styles.input}
-            />
-            <label>{language === "en" ? "Role" : "บทบาท"}</label>
-            <select
-              value={selectedUser.role}
-              onChange={(e) =>
-                setSelectedUser({ ...selectedUser, role: e.target.value })
-              }
-              className={styles.select}
-            >
-              <option value="Physician">
-                {language === "en" ? "Physician" : "แพทย์"}
-              </option>
-              <option value="Pharmacist">
-                {language === "en" ? "Pharmacist" : "เภสัชกร"}
-              </option>
-              <option value="Data Entry">
-                {language === "en" ? "Data Entry" : "เจ้าหน้าที่บันทึกข้อมูล"}
-              </option>
-              <option value="Admin">
-                {language === "en" ? "Admin" : "ผู้ดูแลระบบ"}
-              </option>
+      {/* ---------- INTEGRATION ---------- */}
+      {tab === "integration" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>{language === "en" ? "Integration Settings" : "การเชื่อมต่อระบบ"}</h2>
+          <p>{language === "en" ? "Configure system interfaces and APIs" : "ตั้งค่าการเชื่อมต่อ HIS, Analyzer และ API"}</p>
+
+          <div className={styles.form}>
+            <label>HIS / EMR Endpoint</label>
+            <input className={styles.input} placeholder="https://his.example.com/fhir" />
+
+            <label>Analyzer Interface (ASTM/HL7)</label>
+            <input className={styles.input} placeholder="192.168.1.100:5000" />
+
+            <label>External API Token</label>
+            <input className={styles.input} placeholder="xxxxxxxxxxxx" />
+
+            <button className={styles.button}>
+              {language === "en" ? "Save Integration Settings" : "บันทึกการเชื่อมต่อ"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- SYSTEM SETTINGS ---------- */}
+      {tab === "system" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>{language === "en" ? "System Settings" : "การตั้งค่าทั่วไป"}</h2>
+          <div className={styles.form}>
+            <label>{language === "en" ? "System Name" : "ชื่อระบบ"}</label>
+            <input className={styles.input} placeholder="PGx Digital Platform" />
+
+            <label>{language === "en" ? "Upload Logo" : "อัปโหลดโลโก้"}</label>
+            <input className={styles.input} type="file" />
+
+            <label>{language === "en" ? "Default Language" : "ภาษาหลัก"}</label>
+            <select className={styles.input}>
+              <option>English</option>
+              <option>ไทย</option>
             </select>
 
-            <div className={styles.modalButtons}>
-              <button onClick={handleSaveEdit} className={styles.saveBtn}>
-                <Save size={16} /> {language === "en" ? "Save" : "บันทึก"}
-              </button>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className={styles.cancelBtn}
-              >
-                <X size={16} /> {language === "en" ? "Cancel" : "ยกเลิก"}
-              </button>
-            </div>
+            <button className={styles.button}>
+              {language === "en" ? "Save Settings" : "บันทึกการตั้งค่า"}
+            </button>
           </div>
+        </div>
+      )}
+
+      {/* ---------- LICENSE ---------- */}
+      {tab === "license" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>{language === "en" ? "License & Technology Transfer" : "สิทธิ์การใช้งานและการถ่ายทอดเทคโนโลยี"}</h2>
+          <p>{language === "en" ? "Manage software license and TT module" : "จัดการสิทธิ์การใช้งานและโมดูลสนับสนุน TT"}</p>
+
+          <div className={styles.licenseBox}>
+            <p><strong>License Key:</strong> PGX-2025-THA-001</p>
+            <p><strong>Status:</strong> Active (Valid until 2026-12-31)</p>
+            <button className={styles.button}>{language === "en" ? "Renew License" : "ต่ออายุสิทธิ์การใช้งาน"}</button>
+          </div>
+        </div>
+      )}
+
+      {/* ---------- AUDIT LOG ---------- */}
+      {tab === "log" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>{language === "en" ? "Audit Log" : "บันทึกการใช้งานระบบ"}</h2>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>{language === "en" ? "Timestamp" : "วันเวลา"}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((l, i) => (
+                <tr key={i}>
+                  <td>{l.user}</td>
+                  <td>{l.action}</td>
+                  <td>{l.time}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

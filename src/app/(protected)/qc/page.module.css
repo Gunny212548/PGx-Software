@@ -4,6 +4,7 @@
   min-height: 100vh;
   font-family: "Inter", Arial, sans-serif;
 }
+
 .title {
   font-size: 1.6rem;
   font-weight: bold;
@@ -17,15 +18,15 @@
 
 .tabBar {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.6rem;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 .tabBtn {
   background: #ffffff;
   color: #013237;
   border: 1px solid #4ca771;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
@@ -38,15 +39,16 @@
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 .sectionTitle {
   font-size: 1.1rem;
   font-weight: bold;
   color: #013237;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
+.tableBox { overflow-x: auto; }
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -57,57 +59,45 @@
   border-bottom: 1px solid #e0e0e0;
   text-align: left;
 }
-.table th {
-  color: #013237;
-  border-bottom: 2px solid #4ca771;
-}
+.table th { color: #013237; border-bottom: 2px solid #4ca771; }
 
-.smallBtn, .smallBtnDel {
-  background: #4ca771;
-  color: #fff;
-  border: none;
-  padding: 0.3rem 0.6rem;
-  border-radius: 6px;
-  margin-right: 0.3rem;
-  cursor: pointer;
-}
-.smallBtnDel { background: #e55353; }
-.smallBtn:hover { background: #3a8e60; }
-.smallBtnDel:hover { background: #c9302c; }
-
-.form {
+.qcForm {
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-  max-width: 500px;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 .input {
+  flex: 1;
   padding: 0.6rem;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 0.9rem;
 }
-.button {
+.addBtn {
   background: #4ca771;
   color: #fff;
   border: none;
   border-radius: 6px;
   padding: 0.6rem 1.2rem;
   cursor: pointer;
-  align-self: flex-start;
+  display: flex;
+  align-items: center;
 }
-.button:hover { background: #3a8e60; }
+.addBtn:hover { background: #3a8e60; }
 
-.licenseBox {
-  border: 1px solid #4ca771;
-  background: #f9fff9;
-  border-radius: 8px;
-  padding: 1rem;
-  max-width: 400px;
+.fileInput { margin-bottom: 1rem; }
+
+.note {
+  font-size: 0.9rem;
+  color: #4ca771;
+  margin-top: 1rem;
 }
 
-/* 🌙 Dark Mode */
+/* 🌙 Dark mode */
 :global(html.dark) .container { background: #0d1117; color: #e6edf3; }
 :global(html.dark) .section { background: #161b22; color: #e6edf3; }
 :global(html.dark) .tabBtn { background: #0d1117; color: #e6edf3; border-color: #4ca771; }
 :global(html.dark) .active { background: #2f8a5a; color: #fff; }
 :global(html.dark) .input { background: #0d1117; color: #e6edf3; border: 1px solid #2a2f35; }
+:global(html.dark) .addBtn { background: #2f8a5a; }

@@ -1,198 +1,198 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { usePatients } from "@/context/PatientContext";
+import { useEffect, useState } from "react";
+import { BarChart2, PieChart, FileDown, ActivitySquare } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import { Search, Download, FileDown } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import styles from "./page.module.css";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Pie, PieChart as RePieChart, Cell } from "recharts";
 
 export default function ReportsPage() {
-  const { patients } = usePatients();
   const { language } = useLanguage();
-  const [search, setSearch] = useState("");
+  const [tab, setTab] = useState("dashboard");
 
-  // ✅ Filter only approved patients
-  const approvedPatients = useMemo(() => {
-    return patients
-      .filter(
-        (p) =>
-          p.status === "approved" &&
-          (p.firstName.toLowerCase().includes(search.toLowerCase()) ||
-            p.lastName.toLowerCase().includes(search.toLowerCase()) ||
-            p.idCard.includes(search))
-      )
-      .reverse();
-  }, [patients, search]);
+  // ✅ Mock patient data
+  const [patients, setPatients] = useState<any[]>([]);
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("patients") || "[]");
+    setPatients(stored);
+  }, []);
 
-  // 📤 Export CSV
-  const exportCSV = () => {
-    const headers =
+  // ✅ Summary Counts
+  const total = patients.length;
+  const pendingGene = patients.filter((p) => p.status === "pending_gene").length;
+  const pendingApprove = patients.filter((p) => p.status === "pending_approve").length;
+  const approved = patients.filter((p) => p.status === "approved").length;
+
+  // ✅ KPI Mock data
+  const kpiData = [
+    { name: language === "en" ? "Rejection Rate" : "อัตราการปฏิเสธ", value: 2.4 },
+    { name: language === "en" ? "Repeat Rate" : "อัตราการตรวจซ้ำ", value: 1.3 },
+    { name: language === "en" ? "ADR Incidence" : "อัตราการเกิด ADR", value: 0.8 },
+  ];
+
+  const adoptionData = [
+    { name: language === "en" ? "Participating Units" : "หน่วยบริการที่เข้าร่วม", value: 12 },
+    { name: language === "en" ? "Trained Personnel" : "บุคลากรผ่านอบรม", value: 56 },
+  ];
+
+  // ✅ TAT mock (pre/analytic/post)
+  const tatData = [
+    { stage: "Pre-analytic", avg: 1.2 },
+    { stage: "Analytic", avg: 2.8 },
+    { stage: "Post-analytic", avg: 0.9 },
+  ];
+
+  const COLORS = ["#4CA771", "#F4B400", "#E55353"];
+
+  const handleExport = (type: string) => {
+    alert(
       language === "en"
-        ? [
-            "First Name",
-            "Last Name",
-            "ID Card",
-            "Gene",
-            "Genotype",
-            "Phenotype",
-            "Status",
-          ]
-        : ["ชื่อ", "นามสกุล", "เลขบัตรประชาชน", "ยีน", "จีโนไทป์", "ฟีโนไทป์", "สถานะ"];
-
-    const rows = approvedPatients.map((p) => [
-      p.firstName,
-      p.lastName,
-      p.idCard,
-      p.gene || "-",
-      p.genotype || "-",
-      p.phenotype || "-",
-      language === "en" ? "Approved" : "อนุมัติแล้ว",
-    ]);
-    const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download =
-      language === "en" ? "PGx_Approved_Reports.csv" : "รายงานผู้ป่วย_PGx.csv";
-    a.click();
-  };
-
-  // 🧾 Export PDF
-  const exportPDF = () => {
-    const doc = new jsPDF("p", "pt");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(
-      language === "en"
-        ? "PGx Approved Patient Reports"
-        : "รายงานผู้ป่วยที่ได้รับการอนุมัติ (PGx)",
-      40,
-      40
-    );
-
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(
-      `${language === "en" ? "Generated on:" : "สร้างเมื่อ:"} ${new Date().toLocaleString()}`,
-      40,
-      60
-    );
-
-    const tableColumn =
-      language === "en"
-        ? ["Name", "ID Card", "Gene", "Genotype", "Phenotype", "Status"]
-        : ["ชื่อ-นามสกุล", "เลขบัตรประชาชน", "ยีน", "จีโนไทป์", "ฟีโนไทป์", "สถานะ"];
-
-    const tableRows = approvedPatients.map((p) => [
-      `${p.firstName} ${p.lastName}`,
-      p.idCard,
-      p.gene || "-",
-      p.genotype || "-",
-      p.phenotype || "-",
-      language === "en" ? "Approved" : "อนุมัติแล้ว",
-    ]);
-
-    autoTable(doc, {
-      startY: 80,
-      head: [tableColumn],
-      body: tableRows,
-      styles: { fontSize: 9, cellPadding: 5, halign: "left" },
-      headStyles: {
-        fillColor: [76, 167, 113],
-        textColor: [255, 255, 255],
-      },
-    });
-
-    doc.save(
-      language === "en" ? "PGx_Approved_Reports.pdf" : "รายงานผู้ป่วย_PGx.pdf"
+        ? `📁 Exported ${type} report (mock).`
+        : `📁 ส่งออกสถิติ${type}แล้ว (จำลอง)`
     );
   };
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>
-        {language === "en" ? "Approved Reports" : "รายงานที่อนุมัติแล้ว"}
+        {language === "en" ? "Reports & Analytics" : "รายงานและสถิติ (Reports & Analytics)"}
       </h1>
       <p className={styles.subtitle}>
         {language === "en"
-          ? "Review and export pharmacogenomic reports of approved patients."
-          : "ตรวจสอบและส่งออกรายงานเภสัชพันธุศาสตร์ของผู้ป่วยที่ได้รับการอนุมัติแล้ว"}
+          ? "Executive dashboard and quality indicators"
+          : "แดชบอร์ดสรุปผู้บริหารและตัวชี้วัดคุณภาพ"}
       </p>
 
-      {/* Top Controls */}
-      <div className={styles.topBar}>
-        <div className={styles.searchBar}>
-          <input
-            type="text"
-            placeholder={
-              language === "en"
-                ? "Search by Name or ID..."
-                : "ค้นหาด้วยชื่อหรือเลขบัตร..."
-            }
-            className={styles.searchInput}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className={styles.searchButton}>
-            <Search size={18} />
-          </button>
-        </div>
+      {/* Tabs */}
+      <div className={styles.tabBar}>
+        <button className={`${styles.tabBtn} ${tab === "dashboard" ? styles.active : ""}`} onClick={() => setTab("dashboard")}>
+          📈 {language === "en" ? "Executive Dashboard" : "แดชบอร์ดสรุปผู้บริหาร"}
+        </button>
+        <button className={`${styles.tabBtn} ${tab === "export" ? styles.active : ""}`} onClick={() => setTab("export")}>
+          📊 {language === "en" ? "Export Statistics" : "ส่งออกสถิติ"}
+        </button>
       </div>
 
-      {/* Table */}
-      <div className={styles.tableBox}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>{language === "en" ? "Name" : "ชื่อ-นามสกุล"}</th>
-              <th>{language === "en" ? "ID Card" : "เลขบัตรประชาชน"}</th>
-              <th>{language === "en" ? "Gene" : "ยีน"}</th>
-              <th>{language === "en" ? "Genotype" : "จีโนไทป์"}</th>
-              <th>{language === "en" ? "Phenotype" : "ฟีโนไทป์"}</th>
-              <th>{language === "en" ? "Status" : "สถานะ"}</th>
-              <th>{language === "en" ? "Action" : "การจัดการ"}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {approvedPatients.length === 0 ? (
-              <tr>
-                <td colSpan={7} style={{ textAlign: "center", padding: "1rem" }}>
-                  {language === "en"
-                    ? "No approved reports found."
-                    : "ไม่พบรายงานที่ได้รับการอนุมัติ"}
-                </td>
-              </tr>
-            ) : (
-              approvedPatients.map((p) => (
-                <tr key={p.idCard}>
-                  <td>
-                    {p.firstName} {p.lastName}
-                  </td>
-                  <td>{p.idCard}</td>
-                  <td>{p.gene || "-"}</td>
-                  <td>{p.genotype || "-"}</td>
-                  <td>{p.phenotype || "-"}</td>
-                  <td>
-                    <span className={styles.statusApproved}>
-                      {language === "en" ? "Approved" : "อนุมัติแล้ว"}
-                    </span>
-                  </td>
-                  <td>
-                    <button onClick={exportPDF} className={styles.exportBtnSmall}>
-                      {language === "en" ? "Export" : "ส่งออก"}
-                    </button>
-                  </td>
+      {/* ---------- DASHBOARD ---------- */}
+      {tab === "dashboard" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            {language === "en" ? "Case Summary" : "สรุปจำนวนเคสทั้งหมด"}
+          </h2>
+
+          <div className={styles.cards}>
+            <div className={styles.card}>
+              <p>{language === "en" ? "Total Cases" : "เคสทั้งหมด"}</p>
+              <h3>{total}</h3>
+            </div>
+            <div className={`${styles.card} ${styles.yellow}`}>
+              <p>{language === "en" ? "Pending Gene Entry" : "รอกรอกยีน"}</p>
+              <h3>{pendingGene}</h3>
+            </div>
+            <div className={`${styles.card} ${styles.orange}`}>
+              <p>{language === "en" ? "Pending Approval" : "รออนุมัติ"}</p>
+              <h3>{pendingApprove}</h3>
+            </div>
+            <div className={`${styles.card} ${styles.green}`}>
+              <p>{language === "en" ? "Approved" : "อนุมัติแล้ว"}</p>
+              <h3>{approved}</h3>
+            </div>
+          </div>
+
+          {/* TAT Bar Chart */}
+          <h2 className={styles.sectionTitle}>
+            {language === "en" ? "TAT Monitoring (days)" : "รายงานติดตาม TAT (วัน)"}
+          </h2>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={tatData}>
+              <XAxis dataKey="stage" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="avg" fill="#4CA771" />
+            </BarChart>
+          </ResponsiveContainer>
+
+          {/* KPI Pie Chart */}
+          <h2 className={styles.sectionTitle}>
+            {language === "en" ? "Quality KPI Overview" : "สรุปตัวชี้วัดคุณภาพ"}
+          </h2>
+          <ResponsiveContainer width="100%" height={280}>
+            <RePieChart>
+              <Pie data={kpiData} dataKey="value" nameKey="name" outerRadius={110} label>
+                {kpiData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </RePieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* ---------- EXPORT ---------- */}
+      {tab === "export" && (
+        <div className={styles.section}>
+          <h2 className={styles.sectionTitle}>
+            {language === "en" ? "Export Reports" : "ส่งออกสถิติ"}
+          </h2>
+          <p>{language === "en" ? "Generate monthly or annual reports" : "ส่งออกข้อมูลรายเดือน / รายปี"}</p>
+
+          <div className={styles.exportBtns}>
+            <button className={styles.button} onClick={() => handleExport("monthly")}>
+              <FileDown size={18} /> {language === "en" ? "Export Monthly" : "ส่งออกรายเดือน"}
+            </button>
+            <button className={styles.button} onClick={() => handleExport("annual")}>
+              <FileDown size={18} /> {language === "en" ? "Export Annual" : "ส่งออกรายปี"}
+            </button>
+          </div>
+
+          {/* KPI Table */}
+          <div className={styles.tableBox}>
+            <h3 className={styles.sectionSub}>
+              {language === "en" ? "Quality Indicators" : "ตัวชี้วัดคุณภาพ (KPI)"}
+            </h3>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{language === "en" ? "Indicator" : "ตัวชี้วัด"}</th>
+                  <th>{language === "en" ? "Value" : "ค่า (%)"}</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {kpiData.map((k, i) => (
+                  <tr key={i}>
+                    <td>{k.name}</td>
+                    <td>{k.value}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Adoption Metrics */}
+          <div className={styles.tableBox}>
+            <h3 className={styles.sectionSub}>
+              {language === "en" ? "Adoption Metrics" : "รายงานการนำไปใช้"}
+            </h3>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{language === "en" ? "Metric" : "ตัวชี้วัด"}</th>
+                  <th>{language === "en" ? "Value" : "จำนวน"}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adoptionData.map((a, i) => (
+                  <tr key={i}>
+                    <td>{a.name}</td>
+                    <td>{a.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
