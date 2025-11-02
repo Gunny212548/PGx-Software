@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import styles from "./page.module.css";
 import { useLanguage } from "@/context/LanguageContext";
 import {
@@ -56,10 +57,10 @@ export default function DashboardPage() {
 
       {/* Quick Access */}
       <div className={styles.quickAccess}>
-        <button className={styles.actionBtn}>
-          <Plus size={18} />{""}
-          {language === "en" ? "Add New Case" : "เพิ่มเคสใหม่"}
-        </button>
+        <Link href="/case/add" className={styles.actionBtn}>
+            <Plus size={18} style={{ marginRight: 6 }} />
+            {language === "en" ? "Add New Case" : "เพิ่มเคสใหม่"}
+        </Link>
         <button className={styles.actionBtn}>
           <ScanLine size={18} />{" "}
           {language === "en" ? "Scan Request Form" : "สแกนใบสั่งตรวจ"}
