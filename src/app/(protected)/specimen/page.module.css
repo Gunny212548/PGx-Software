@@ -17,6 +17,7 @@
   margin-bottom: 1.5rem;
 }
 
+/* Sections / Cards */
 .section {
   background: #fff;
   border-radius: 12px;
@@ -24,12 +25,34 @@
   margin-bottom: 1.5rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
-
 .sectionTitle {
   font-size: 1.1rem;
   font-weight: bold;
   color: #013237;
   margin-bottom: 0.75rem;
+}
+
+/* Stat chips */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.statCard {
+  background: #f7fff8;
+  border: 1px solid #cce8cc;
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+}
+.statLabel {
+  font-size: 0.8rem;
+  color: #4ca771;
+}
+.statValue {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #013237;
 }
 
 /* Table */
@@ -44,6 +67,7 @@
   padding: 0.6rem;
   border-bottom: 1px solid #e0e0e0;
   text-align: left;
+  vertical-align: top;
 }
 .table th {
   color: #013237;
@@ -71,9 +95,12 @@
   border-radius: 6px;
   padding: 0.6rem 1rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* Result */
+/* Result box */
 .resultBox {
   background: #f9fff9;
   border: 1px solid #cce8cc;
@@ -82,57 +109,116 @@
 }
 .qrBox {
   display: flex;
-  flex-direction: column;
+  gap: 1rem;
   align-items: center;
   margin: 1rem 0;
+  flex-wrap: wrap;
 }
-.actions {
+.badge {
+  display: inline-flex;
+  padding: 0.25rem 0.6rem;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid #cce8cc;
+  color: #2f6f43;
+  background: #f4fff4;
+}
+
+/* Actions */
+.row {
   display: flex;
   gap: 0.6rem;
+  flex-wrap: wrap;
 }
-.acceptBtn {
-  background: #4ca771;
-  color: white;
+.actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.acceptBtn,
+.rejectBtn,
+.printBtn,
+.uploadBtn {
   border: none;
   border-radius: 6px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.9rem;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
 }
-.rejectBtn {
-  background: #e55353;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
+.acceptBtn { background: #4ca771; color: white; }
+.rejectBtn { background: #e55353; color: white; }
+.printBtn  { background: #0ea5e9; color: white; }
+.uploadBtn { background: #e9f7ef; color: #0b5e3c; border: 1px solid #cce8cc; }
+
 .rejectBox {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: 240px 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
 }
-.input {
-  padding: 0.6rem;
+.select, .input, .file {
+  padding: 0.55rem 0.6rem;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 0.9rem;
+  background: #fff;
 }
+
+.attachList {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+.attachChip {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid #cce8cc;
+  background: #f4fff4;
+  border-radius: 999px;
+}
+
 .noResult {
   color: #d33;
   font-weight: 600;
 }
 
-/* 🌙 Dark mode */
+/* Log table styles */
+.statusAccepted {
+  color: #0b5e3c;
+  background: #ebfff2;
+  border: 1px solid #b9e6c9;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.statusRejected {
+  color: #7a1313;
+  background: #fff0f0;
+  border: 1px solid #f2bcbc;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* Loading */
+.loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4ca771;
+  font-weight: 600;
+}
+
+/* Dark mode */
 :global(html.dark) .container { background: #0d1117; color: #e6edf3; }
 :global(html.dark) .section { background: #161b22; color: #e6edf3; }
 :global(html.dark) .table th { color: #e6edf3; border-color: #2a2f35; }
 :global(html.dark) .table td { border-color: #2a2f35; }
 :global(html.dark) .searchInput,
-:global(html.dark) .input {
+:global(html.dark) .input,
+:global(html.dark) .select {
   background: #0d1117;
   color: #e6edf3;
   border: 1px solid #2a2f35;
@@ -140,3 +226,7 @@
 :global(html.dark) .searchButton,
 :global(html.dark) .acceptBtn { background: #2f8a5a; }
 :global(html.dark) .rejectBtn { background: #a94444; }
+:global(html.dark) .printBtn  { background: #17739f; }
+:global(html.dark) .statCard { background: #0f1512; border-color: #244a34; }
+:global(html.dark) .banner { background: #0f1512; border-color: #244a34; }
+:global(html.dark) .badge { background: #0f1512; border-color: #244a34; color: #a6e3bf; }

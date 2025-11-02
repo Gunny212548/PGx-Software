@@ -1,86 +1,230 @@
 "use client";
 
-import { useState } from "react";
-import { Users, Shield, Network, Settings, FileText, Activity } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
+import { useMemo, useState } from "react";
+import {
+  Shield,
+  Users,
+  FileLock,
+  Link,
+  Settings,
+  Key,
+  FileText,
+  Download,
+  Plus,
+  Trash2,
+  Edit,
+  X,
+  Save,
+} from "lucide-react";
 import styles from "./page.module.css";
+import { useLanguage } from "@/context/LanguageContext";
+
+/* Types */
+interface User {
+  id: number;
+  name: string;
+  role: "Admin" | "Doctor" | "Lab" | "Viewer";
+  email: string;
+}
+
+interface Audit {
+  id: string;
+  user: string;
+  action: string;
+  timestamp: string;
+}
+
+type PDPAItemKey =
+  | "econsent"
+  | "templates"
+  | "retention"
+  | "dpia"
+  | "rop"
+  | "breach";
+
+type IntegrationKey = "his" | "analyzer" | "external";
+
+/* Helpers */
+const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function AdminPanel() {
   const { language } = useLanguage();
-  const [tab, setTab] = useState("users");
+  const lang = language === "en" ? "en" : "th";
 
-  // Mock users
-  const [users, setUsers] = useState([
-    { name: "Dr. Alice", role: "Admin", department: "Pharmacogenomics" },
-    { name: "Tech. Bob", role: "Technician", department: "Molecular Lab" },
-    { name: "Pharm. Carol", role: "Pharmacist", department: "Clinical Pharmacy" },
+  /* ---------------- USERS ---------------- */
+  const [users, setUsers] = useState<User[]>([
+    { id: 1, name: "Dr. Somchai", role: "Doctor", email: "somchai@pgx.com" },
+    { id: 2, name: "Lab Anan", role: "Lab", email: "anan@pgx.com" },
+    { id: 3, name: "Admin", role: "Admin", email: "admin@pgx.com" },
   ]);
 
-  const [logs] = useState([
-    { user: "Admin", action: "Edited Patient Record", time: "2025-10-26 13:32" },
-    { user: "Tech. Bob", action: "Uploaded QC File", time: "2025-10-25 10:21" },
+  // Add/Edit User Modals
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newUser, setNewUser] = useState<User>({
+    id: 0,
+    name: "",
+    email: "",
+    role: "Viewer",
+  });
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+
+  const openAddUser = () => {
+    setNewUser({ id: 0, name: "", email: "", role: "Viewer" });
+    setShowAddUser(true);
+  };
+  const saveNewUser = () => {
+    if (!newUser.name || !newUser.email) return;
+    setUsers((prev) => [...prev, { ...newUser, id: Date.now() }]);
+    setShowAddUser(false);
+  };
+  const saveEditUser = () => {
+    if (!editUser) return;
+    if (!editUser.name || !editUser.email) return;
+    setUsers((prev) => prev.map((u) => (u.id === editUser.id ? editUser : u)));
+    setEditUser(null);
+  };
+  const confirmDelete = () => {
+    if (deleteUserId == null) return;
+    setUsers((prev) => prev.filter((u) => u.id !== deleteUserId));
+    setDeleteUserId(null);
+  };
+
+  /* ---------------- PDPA ---------------- */
+  const pdpaMap: Record<PDPAItemKey, string> = useMemo(
+    () => ({
+      econsent: lang === "en" ? "e-Consent setup" : "ตั้งค่า e-Consent",
+      templates: lang === "en" ? "Consent Templates" : "เทมเพลต Consent",
+      retention: lang === "en" ? "Retention Policy" : "ระยะเวลาเก็บรักษา",
+      dpia: lang === "en" ? "Risk Assessment (DPIA)" : "แบบประเมินความเสี่ยง (DPIA)",
+      rop: lang === "en" ? "Records of Processing" : "บันทึกร่องรอยการประมวลผล",
+      breach: lang === "en" ? "Data Breach Handling" : "กระบวนการแจ้งเหตุละเมิดข้อมูล",
+    }),
+    [lang]
+  );
+
+  type PDPAConfig = {
+    version?: string;
+    purpose?: string;
+    retentionDays?: number;
+    note?: string;
+  };
+  const [pdpaModal, setPdpaModal] = useState<PDPAItemKey | null>(null);
+  const [pdpaConfig, setPdpaConfig] = useState<PDPAConfig>({
+    version: "v1.0",
+    purpose: "",
+    retentionDays: 365,
+    note: "",
+  });
+  const savePdpa = () => {
+    // mock save
+    setPdpaModal(null);
+  };
+
+  /* ---------------- Integration ---------------- */
+  const [integrationModal, setIntegrationModal] = useState<IntegrationKey | null>(null);
+  const [integrationForm, setIntegrationForm] = useState({
+    endpoint: "",
+    token: "",
+    status: "Disconnected",
+  });
+  const saveIntegration = () => {
+    setIntegrationForm((f) => ({ ...f, status: "Connected" }));
+    setIntegrationModal(null);
+  };
+
+  /* ---------------- System Settings ---------------- */
+  const [sysModal, setSysModal] = useState(false);
+  const [isoMessage, setIsoMessage] = useState("");
+  const [logoFile, setLogoFile] = useState<string>("");
+
+  /* ---------------- License & TT ---------------- */
+  const [licenseModal, setLicenseModal] = useState(false);
+
+  /* ---------------- Audit ---------------- */
+  const [logs, setLogs] = useState<Audit[]>([
+    { id: "1", user: "Admin", action: "Login", timestamp: "2025-11-01 09:20" },
+    { id: "2", user: "Somchai", action: "Viewed Patient #102", timestamp: "2025-11-01 10:05" },
+    { id: "3", user: "Anan", action: "Edited SOP#2", timestamp: "2025-11-01 13:12" },
   ]);
+  const [viewLog, setViewLog] = useState<Audit | null>(null);
+
+  /* UI text */
+  const txt = {
+    pageTitle: lang === "en" ? "System Settings (Admin Panel)" : "การตั้งค่าระบบ (Admin Panel)",
+    pageDesc:
+      lang === "en"
+        ? "Manage users, privacy (PDPA), integrations, and audit logs."
+        : "จัดการผู้ใช้ ความเป็นส่วนตัว (PDPA) การเชื่อมต่อ และบันทึกการใช้งาน",
+    mock: lang === "en" ? "Mock only (no API)" : "จำลองเท่านั้น (ไม่เชื่อม API)",
+
+    users: lang === "en" ? "User Management" : "การจัดการผู้ใช้งาน",
+    add: lang === "en" ? "Add" : "เพิ่ม",
+    edit: lang === "en" ? "Edit" : "แก้ไข",
+    delete: lang === "en" ? "Delete" : "ลบ",
+    save: lang === "en" ? "Save" : "บันทึก",
+    cancel: lang === "en" ? "Cancel" : "ยกเลิก",
+
+    pdpa: "PDPA Management",
+    cfg: lang === "en" ? "Configure" : "ตั้งค่า",
+
+    integ: "Integration Settings",
+    sys: lang === "en" ? "System Settings" : "การตั้งค่าทั่วไป",
+    license: lang === "en" ? "License & Technology Transfer" : "สิทธิ์การใช้งาน & ถ่ายทอดเทคโนโลยี",
+    audit: "Audit Log",
+  };
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>
-        {language === "en" ? "Admin Panel" : "การตั้งค่าระบบ (Admin Panel)"}
-      </h1>
-      <p className={styles.subtitle}>
-        {language === "en"
-          ? "Manage users, PDPA, integration, and system settings"
-          : "จัดการผู้ใช้งาน, PDPA, การเชื่อมต่อ และการตั้งค่าระบบ"}
-      </p>
+      <h1 className={styles.title}>{txt.pageTitle}</h1>
+      <p className={styles.subtitle}>{txt.pageDesc}</p>
 
-      {/* Tabs */}
-      <div className={styles.tabBar}>
-        <button className={`${styles.tabBtn} ${tab === "users" ? styles.active : ""}`} onClick={() => setTab("users")}>
-          👥 {language === "en" ? "User Management" : "การจัดการผู้ใช้งาน"}
-        </button>
-        <button className={`${styles.tabBtn} ${tab === "pdpa" ? styles.active : ""}`} onClick={() => setTab("pdpa")}>
-          🧾 PDPA
-        </button>
-        <button className={`${styles.tabBtn} ${tab === "integration" ? styles.active : ""}`} onClick={() => setTab("integration")}>
-          🔗 {language === "en" ? "Integration" : "การเชื่อมต่อระบบ"}
-        </button>
-        <button className={`${styles.tabBtn} ${tab === "system" ? styles.active : ""}`} onClick={() => setTab("system")}>
-          ⚙️ {language === "en" ? "System Settings" : "การตั้งค่าทั่วไป"}
-        </button>
-        <button className={`${styles.tabBtn} ${tab === "license" ? styles.active : ""}`} onClick={() => setTab("license")}>
-          📜 {language === "en" ? "License & TT" : "สิทธิ์การใช้งาน & TT"}
-        </button>
-        <button className={`${styles.tabBtn} ${tab === "log" ? styles.active : ""}`} onClick={() => setTab("log")}>
-          🧠 Audit Log
-        </button>
+      <div className={styles.banner}>
+        <Shield size={18} />
+        <strong>{lang === "en" ? "Admin Panel mode" : "โหมดผู้ดูแลระบบ"}</strong>
+        <span className={styles.badge}>{txt.mock}</span>
       </div>
 
-      {/* ---------- USER MANAGEMENT ---------- */}
-      {tab === "users" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>
-            {language === "en" ? "User Management" : "การจัดการผู้ใช้งาน"}
-          </h2>
+      {/* USER MANAGEMENT */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <Users size={18} /> {txt.users}
+        </h2>
+
+        <div className={styles.row} style={{ marginBottom: ".8rem" }}>
+          <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={openAddUser}>
+            <Plus size={16} /> {txt.add} User
+          </button>
+        </div>
+
+        <div className={styles.tableBox}>
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>{language === "en" ? "Name" : "ชื่อ"}</th>
-                <th>{language === "en" ? "Role" : "สิทธิ์"}</th>
-                <th>{language === "en" ? "Department" : "หน่วยงาน"}</th>
-                <th>{language === "en" ? "Actions" : "จัดการ"}</th>
+                <th>{lang === "en" ? "Name" : "ชื่อ"}</th>
+                <th>Email</th>
+                <th>{lang === "en" ? "Role" : "สิทธิ์"}</th>
+                <th>{lang === "en" ? "Actions" : "การทำงาน"}</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u, i) => (
-                <tr key={i}>
+              {users.map((u) => (
+                <tr key={u.id}>
                   <td>{u.name}</td>
+                  <td>{u.email}</td>
                   <td>{u.role}</td>
-                  <td>{u.department}</td>
-                  <td>
-                    <button className={styles.smallBtn}>
-                      {language === "en" ? "Edit" : "แก้ไข"}
+                  <td className={styles.row}>
+                    <button
+                      className={`${styles.btn} ${styles.btnGhost}`}
+                      onClick={() => setEditUser({ ...u })}
+                    >
+                      <Edit size={14} /> {txt.edit}
                     </button>
-                    <button className={styles.smallBtnDel}>
-                      {language === "en" ? "Delete" : "ลบ"}
+                    <button
+                      className={`${styles.btn} ${styles.btnDanger}`}
+                      onClick={() => setDeleteUserId(u.id)}
+                    >
+                      <Trash2 size={14} /> {txt.delete}
                     </button>
                   </td>
                 </tr>
@@ -88,120 +232,463 @@ export default function AdminPanel() {
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
-      {/* ---------- PDPA ---------- */}
-      {tab === "pdpa" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>PDPA Management</h2>
-          <p>{language === "en" ? "Manage consent templates, retention, and DPIA" : "ตั้งค่า Consent, Retention Policy และ DPIA"}</p>
+      {/* PDPA MANAGEMENT */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <FileLock size={18} /> {txt.pdpa}
+        </h2>
 
-          <div className={styles.form}>
-            <label>{language === "en" ? "Data Retention (years)" : "ระยะเวลาเก็บข้อมูล (ปี)"}</label>
-            <input className={styles.input} type="number" placeholder="5" />
+        <div className={styles.cardGrid}>
+          {(
+            [
+              ["econsent", "Set dynamic e-Consent / Withdrawal / Legal representative"],
+              ["templates", "Templates & Purpose (Clinical/Research)"],
+              ["retention", "Retention Policy (days/years)"],
+              ["dpia", "DPIA assessment"],
+              ["rop", "Records of Processing"],
+              ["breach", "Data Breach workflow"],
+            ] as [PDPAItemKey, string][]
+          ).map(([key, desc]) => (
+            <div key={key} className={styles.card}>
+              <div className={styles.cardTitle}>{pdpaMap[key]}</div>
+              <div className={styles.cardDesc}>
+                {lang === "en" ? desc : "ตั้งค่าและจัดการตามข้อกำหนด PDPA"}
+              </div>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={() => setPdpaModal(key)}
+              >
+                <Settings size={16} /> {txt.cfg}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
-            <label>{language === "en" ? "Enable Dynamic e-Consent" : "เปิดใช้งาน e-Consent แบบไดนามิก"}</label>
-            <select className={styles.input}>
-              <option>ON</option>
-              <option>OFF</option>
-            </select>
+      {/* INTEGRATION */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <Link size={18} /> {txt.integ}
+        </h2>
 
-            <label>{language === "en" ? "Default Purpose" : "วัตถุประสงค์การใช้ข้อมูล"}</label>
-            <select className={styles.input}>
-              <option>Clinical</option>
-              <option>Research</option>
-            </select>
+        <div className={styles.cardGrid}>
+          {(
+            [
+              ["his", "HIS/EMR (FHIR/ADT/ORD/ORU)"],
+              ["analyzer", "Analyzer (ASTM/HL7)"],
+              ["external", "External Lab API"],
+            ] as [IntegrationKey, string][]
+          ).map(([key, label]) => (
+            <div key={key} className={styles.card}>
+              <div className={styles.cardTitle}>{label}</div>
+              <div className={styles.cardDesc}>
+                {lang === "en" ? "Connection configuration and status." : "ตั้งค่าและสถานะการเชื่อมต่อ"}
+              </div>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={() => {
+                  setIntegrationForm({ endpoint: "", token: "", status: "Disconnected" });
+                  setIntegrationModal(key);
+                }}
+              >
+                <Settings size={16} /> {txt.cfg}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
 
-            <button className={styles.button}>
-              {language === "en" ? "Save PDPA Settings" : "บันทึกการตั้งค่า PDPA"}
+      {/* SYSTEM SETTINGS */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <Settings size={18} /> {txt.sys}
+        </h2>
+        <div className={styles.row}>
+          <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setSysModal(true)}>
+            <Settings size={16} /> {lang === "en" ? "Open settings" : "เปิดการตั้งค่า"}
+          </button>
+        </div>
+      </div>
+
+      {/* LICENSE & TT */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <Key size={18} /> {txt.license}
+        </h2>
+        <div className={styles.cardGrid}>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>{lang === "en" ? "License Terms" : "ข้อกำหนดสิทธิ์การใช้งาน"}</div>
+            <div className={styles.cardDesc}>
+              {lang === "en" ? "View or renew license." : "ดูหรือดำเนินการต่ออายุ"}
+            </div>
+            <div className={styles.row}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setLicenseModal(true)}>
+                <FileText size={16} /> {lang === "en" ? "View" : "ดูรายละเอียด"}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => alert("Renew (mock)")}>
+                <Download size={16} /> {lang === "en" ? "Renew" : "ต่ออายุ"}
+              </button>
+            </div>
+          </div>
+          <div className={styles.card}>
+            <div className={styles.cardTitle}>{lang === "en" ? "Technology Transfer" : "ถ่ายทอดเทคโนโลยี"}</div>
+            <div className={styles.cardDesc}>
+              {lang === "en" ? "Support for TT and collaboration." : "สนับสนุนการถ่ายทอดเทคโนโลยีและความร่วมมือ"}
+            </div>
+            <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => alert("Open TT module (mock)")}>
+              <Settings size={16} /> {lang === "en" ? "Open Module" : "เปิดโมดูล"}
             </button>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* ---------- INTEGRATION ---------- */}
-      {tab === "integration" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{language === "en" ? "Integration Settings" : "การเชื่อมต่อระบบ"}</h2>
-          <p>{language === "en" ? "Configure system interfaces and APIs" : "ตั้งค่าการเชื่อมต่อ HIS, Analyzer และ API"}</p>
-
-          <div className={styles.form}>
-            <label>HIS / EMR Endpoint</label>
-            <input className={styles.input} placeholder="https://his.example.com/fhir" />
-
-            <label>Analyzer Interface (ASTM/HL7)</label>
-            <input className={styles.input} placeholder="192.168.1.100:5000" />
-
-            <label>External API Token</label>
-            <input className={styles.input} placeholder="xxxxxxxxxxxx" />
-
-            <button className={styles.button}>
-              {language === "en" ? "Save Integration Settings" : "บันทึกการเชื่อมต่อ"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- SYSTEM SETTINGS ---------- */}
-      {tab === "system" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{language === "en" ? "System Settings" : "การตั้งค่าทั่วไป"}</h2>
-          <div className={styles.form}>
-            <label>{language === "en" ? "System Name" : "ชื่อระบบ"}</label>
-            <input className={styles.input} placeholder="PGx Digital Platform" />
-
-            <label>{language === "en" ? "Upload Logo" : "อัปโหลดโลโก้"}</label>
-            <input className={styles.input} type="file" />
-
-            <label>{language === "en" ? "Default Language" : "ภาษาหลัก"}</label>
-            <select className={styles.input}>
-              <option>English</option>
-              <option>ไทย</option>
-            </select>
-
-            <button className={styles.button}>
-              {language === "en" ? "Save Settings" : "บันทึกการตั้งค่า"}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- LICENSE ---------- */}
-      {tab === "license" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{language === "en" ? "License & Technology Transfer" : "สิทธิ์การใช้งานและการถ่ายทอดเทคโนโลยี"}</h2>
-          <p>{language === "en" ? "Manage software license and TT module" : "จัดการสิทธิ์การใช้งานและโมดูลสนับสนุน TT"}</p>
-
-          <div className={styles.licenseBox}>
-            <p><strong>License Key:</strong> PGX-2025-THA-001</p>
-            <p><strong>Status:</strong> Active (Valid until 2026-12-31)</p>
-            <button className={styles.button}>{language === "en" ? "Renew License" : "ต่ออายุสิทธิ์การใช้งาน"}</button>
-          </div>
-        </div>
-      )}
-
-      {/* ---------- AUDIT LOG ---------- */}
-      {tab === "log" && (
-        <div className={styles.section}>
-          <h2 className={styles.sectionTitle}>{language === "en" ? "Audit Log" : "บันทึกการใช้งานระบบ"}</h2>
+      {/* AUDIT LOG */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>
+          <FileText size={18} /> {txt.audit}
+        </h2>
+        <div className={styles.tableBox}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>User</th>
-                <th>Action</th>
-                <th>{language === "en" ? "Timestamp" : "วันเวลา"}</th>
+                <th>{lang === "en" ? "Action" : "การกระทำ"}</th>
+                <th>{lang === "en" ? "Timestamp" : "เวลา"}</th>
+                <th>{lang === "en" ? "View" : "ดู"}</th>
               </tr>
             </thead>
             <tbody>
-              {logs.map((l, i) => (
-                <tr key={i}>
+              {logs.map((l) => (
+                <tr key={l.id}>
                   <td>{l.user}</td>
                   <td>{l.action}</td>
-                  <td>{l.time}</td>
+                  <td>{l.timestamp}</td>
+                  <td>
+                    <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setViewLog(l)}>
+                      <FileText size={14} /> {lang === "en" ? "Detail" : "รายละเอียด"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* ---------------- MODALS ---------------- */}
+
+      {/* Add user */}
+      {showAddUser && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{lang === "en" ? "Add User" : "เพิ่มผู้ใช้"}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setShowAddUser(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <input
+                className={styles.input}
+                placeholder={lang === "en" ? "Full name" : "ชื่อ-นามสกุล"}
+                value={newUser.name}
+                onChange={(e) => setNewUser((u) => ({ ...u, name: e.target.value }))}
+              />
+              <input
+                className={styles.input}
+                placeholder="Email"
+                value={newUser.email}
+                onChange={(e) => setNewUser((u) => ({ ...u, email: e.target.value }))}
+              />
+              <select
+                className={styles.select}
+                value={newUser.role}
+                onChange={(e) =>
+                  setNewUser((u) => ({ ...u, role: e.target.value as User["role"] }))
+                }
+              >
+                <option>Admin</option>
+                <option>Doctor</option>
+                <option>Lab</option>
+                <option>Viewer</option>
+              </select>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setShowAddUser(false)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={saveNewUser}>
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit user */}
+      {editUser && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{lang === "en" ? "Edit User" : "แก้ไขผู้ใช้"}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setEditUser(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <input
+                className={styles.input}
+                placeholder={lang === "en" ? "Full name" : "ชื่อ-นามสกุล"}
+                value={editUser.name}
+                onChange={(e) => setEditUser({ ...editUser, name: e.target.value })}
+              />
+              <input
+                className={styles.input}
+                placeholder="Email"
+                value={editUser.email}
+                onChange={(e) => setEditUser({ ...editUser, email: e.target.value })}
+              />
+              <select
+                className={styles.select}
+                value={editUser.role}
+                onChange={(e) =>
+                  setEditUser({ ...editUser, role: e.target.value as User["role"] })
+                }
+              >
+                <option>Admin</option>
+                <option>Doctor</option>
+                <option>Lab</option>
+                <option>Viewer</option>
+              </select>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setEditUser(null)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={saveEditUser}>
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {deleteUserId !== null && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{lang === "en" ? "Confirm delete" : "ยืนยันการลบ"}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setDeleteUserId(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              {lang === "en" ? "Remove this user?" : "ต้องการลบผู้ใช้นี้หรือไม่?"}
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setDeleteUserId(null)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnDanger}`} onClick={confirmDelete}>
+                <Trash2 size={16} /> {txt.delete}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PDPA config modal */}
+      {pdpaModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{pdpaMap[pdpaModal]}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setPdpaModal(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <input
+                className={styles.input}
+                placeholder="Version"
+                value={pdpaConfig.version ?? ""}
+                onChange={(e) => setPdpaConfig((c) => ({ ...c, version: e.target.value }))}
+              />
+              <input
+                className={styles.input}
+                placeholder={lang === "en" ? "Purpose / Objective" : "วัตถุประสงค์"}
+                value={pdpaConfig.purpose ?? ""}
+                onChange={(e) => setPdpaConfig((c) => ({ ...c, purpose: e.target.value }))}
+              />
+              <input
+                className={styles.input}
+                placeholder={lang === "en" ? "Retention (days)" : "ระยะเวลาเก็บรักษา (วัน)"}
+                type="number"
+                value={pdpaConfig.retentionDays ?? 0}
+                onChange={(e) =>
+                  setPdpaConfig((c) => ({ ...c, retentionDays: Number(e.target.value) }))
+                }
+              />
+              <textarea
+                className={`${styles.textarea}`}
+                placeholder={lang === "en" ? "Notes" : "หมายเหตุ"}
+                value={pdpaConfig.note ?? ""}
+                onChange={(e) => setPdpaConfig((c) => ({ ...c, note: e.target.value }))}
+              />
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setPdpaModal(null)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={savePdpa}>
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Integration modal */}
+      {integrationModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>
+                {integrationModal === "his"
+                  ? "HIS/EMR"
+                  : integrationModal === "analyzer"
+                  ? "Analyzer"
+                  : "External API"}
+              </div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setIntegrationModal(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <input
+                className={styles.input}
+                placeholder="Endpoint URL"
+                value={integrationForm.endpoint}
+                onChange={(e) => setIntegrationForm((f) => ({ ...f, endpoint: e.target.value }))}
+              />
+              <input
+                className={styles.input}
+                placeholder="Access Token"
+                value={integrationForm.token}
+                onChange={(e) => setIntegrationForm((f) => ({ ...f, token: e.target.value }))}
+              />
+              <div className={styles.badge}>Status: {integrationForm.status}</div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setIntegrationModal(null)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={saveIntegration}>
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* System settings modal */}
+      {sysModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{txt.sys}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setSysModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <input
+                type="file"
+                className={styles.input}
+                onChange={(e) => setLogoFile(e.target.files?.[0]?.name ?? "")}
+              />
+              {logoFile && <div className={styles.badge}>Logo: {logoFile}</div>}
+              <input
+                className={styles.input}
+                placeholder={lang === "en" ? "ISO Message" : "ข้อความ ISO"}
+                value={isoMessage}
+                onChange={(e) => setIsoMessage(e.target.value)}
+              />
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setSysModal(false)}>
+                {txt.cancel}
+              </button>
+              <button
+                className={`${styles.btn} ${styles.btnPrimary}`}
+                onClick={() => setSysModal(false)}
+              >
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* License modal */}
+      {licenseModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>{lang === "en" ? "License Terms" : "ข้อกำหนดสิทธิ์การใช้งาน"}</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setLicenseModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div style={{ lineHeight: 1.6 }}>
+                <strong>SWU-PGx</strong> — {lang === "en" ? "Internal-use license (mock)" : "สิทธิ์การใช้งานภายใน (จำลอง)"}<br/>
+                {lang === "en" ? "Not for commercial use. Redistribution prohibited." : "ห้ามใช้เชิงพาณิชย์และห้ามเผยแพร่ต่อ"}
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setLicenseModal(false)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setLicenseModal(false)}>
+                <Download size={16} /> PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Audit view */}
+      {viewLog && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalBox}>
+            <div className={styles.modalHeader}>
+              <div className={styles.modalTitle}>Audit</div>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setViewLog(null)}>
+                <X size={16} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div><strong>User:</strong> {viewLog.user}</div>
+              <div><strong>Action:</strong> {viewLog.action}</div>
+              <div><strong>Time:</strong> {viewLog.timestamp}</div>
+              <textarea
+                className={styles.textarea}
+                placeholder={lang === "en" ? "Comment (mock)" : "หมายเหตุ (จำลอง)"}
+              />
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={`${styles.btn} ${styles.btnGhost}`} onClick={() => setViewLog(null)}>
+                {txt.cancel}
+              </button>
+              <button className={`${styles.btn} ${styles.btnPrimary}`} onClick={() => setViewLog(null)}>
+                <Save size={16} /> {txt.save}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

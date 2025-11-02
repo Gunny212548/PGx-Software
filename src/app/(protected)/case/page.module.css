@@ -30,12 +30,15 @@
   background: #4ca771;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 0.6rem 1rem;
-  cursor: pointer;
-  font-weight: bold;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  text-decoration: none;
 }
 .button:hover { background: #3a8e60; }
 
@@ -130,6 +133,7 @@
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
+
 }
 
 .secondaryBtn {
@@ -144,6 +148,7 @@
   display: flex;
   align-items: center;
   transition: background 0.2s ease;
+  text-decoration: none;
 }
 .secondaryBtn:hover {
   background: #d6f0d4;

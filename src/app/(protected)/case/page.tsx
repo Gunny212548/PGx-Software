@@ -152,12 +152,14 @@ export default function CaseListPage() {
                       }`}
                     >
                       {language === "en"
-                        ? p.status.replace("_", " ")
+                        ? p.status?.replace("_", " ") || "Unknown"
                         : p.status === "pending_gene"
                         ? "รอกรอกยีน"
                         : p.status === "pending_approve"
                         ? "รออนุมัติ"
-                        : "อนุมัติแล้ว"}
+                        : p.status === "approved"
+                        ? "อนุมัติแล้ว"
+                        : "ไม่ทราบสถานะ"}
                     </span>
                   </td>
                   <td className={styles.rowActions}>

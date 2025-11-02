@@ -5,7 +5,7 @@ import styles from "./page.module.css";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   Search,
-  PlusCircle,
+  Plus,
   ScanLine,
   Bell,
   FileText,
@@ -28,8 +28,8 @@ export default function DashboardPage() {
     { label: "Average TAT", th: "TAT เฉลี่ย", value: "18 ชม." },
   ];
   const notifications = [
-    { th: "🧬 เคส CYP2C9 ของผู้ป่วย A001 รอแปลผล", en: "🧬 CYP2C9 case (A001) pending review" },
-    { th: "⏰ เคส HLA-B*15:02 ของผู้ป่วย B004 เกินกำหนด TAT", en: "⏰ HLA-B*15:02 case (B004) exceeded TAT" },
+    { th: " เคส CYP2C9 ของผู้ป่วย A001 รอแปลผล", en: " CYP2C9 case (A001) pending review" },
+    { th: " เคส HLA-B*15:02 ของผู้ป่วย B004 เกินกำหนด TAT", en: " HLA-B*15:02 case (B004) exceeded TAT" },
   ];
   const articles = [
     {
@@ -57,7 +57,7 @@ export default function DashboardPage() {
       {/* Quick Access */}
       <div className={styles.quickAccess}>
         <button className={styles.actionBtn}>
-          <PlusCircle size={18} />{""}
+          <Plus size={18} />{""}
           {language === "en" ? "Add New Case" : "เพิ่มเคสใหม่"}
         </button>
         <button className={styles.actionBtn}>
