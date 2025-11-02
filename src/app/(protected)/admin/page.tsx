@@ -179,12 +179,6 @@ export default function AdminPanel() {
       <h1 className={styles.title}>{txt.pageTitle}</h1>
       <p className={styles.subtitle}>{txt.pageDesc}</p>
 
-      <div className={styles.banner}>
-        <Shield size={18} />
-        <strong>{lang === "en" ? "Admin Panel mode" : "โหมดผู้ดูแลระบบ"}</strong>
-        <span className={styles.badge}>{txt.mock}</span>
-      </div>
-
       {/* USER MANAGEMENT */}
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>
